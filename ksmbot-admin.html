@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KSMBot · Panel Order</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --brand:#C8521A;
+    --brand-dark:#9C3F13;
+    --brand-tint:#FBE9DF;
+    --ink:#1E1B18;
+    --ink-soft:#6B645D;
+    --paper:#FAF8F5;
+    --card:#FFFFFF;
+    --line:#EAE4DC;
+    --ok:#2F7D4F;
+    --ok-tint:#E4F3EA;
+    --warn:#B8860B;
+    --warn-tint:#FBF1DA;
+    --bad:#B23B3B;
+    --bad-tint:#F9E6E6;
+    --info:#3A6EA5;
+    --info-tint:#E7EFF7;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Plus Jakarta Sans',system-ui,sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+  }
+  .mono{font-family:'DM Mono',monospace;}
+
+  header{
+    padding:22px 24px 18px;
+    background:var(--card);
+    border-bottom:1px solid var(--line);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    position:sticky;
+    top:0;
+    z-index:10;
+  }
+  .brand{display:flex; align-items:center; gap:12px;}
+  .brand-mark{
+    width:38px; height:38px; border-radius:10px;
+    background:linear-gradient(135deg, var(--brand), var(--brand-dark));
+    display:flex; align-items:center; justify-content:center;
+    color:white; font-weight:800; font-size:16px;
+  }
+  .brand-text h1{font-size:16px; margin:0; font-weight:800; letter-spacing:-0.01em;}
+  .brand-text span{font-size:12px; color:var(--ink-soft);}
+
+  nav{display:flex; gap:4px; background:var(--brand-tint); padding:4px; border-radius:11px;}
+  nav button{
+    border:none; background:transparent; padding:9px 16px; border-radius:8px;
+    font-family:inherit; font-weight:600; font-size:13.5px; color:var(--brand-dark);
+    cursor:pointer; transition:all .15s ease;
+  }
+  nav button.active{background:var(--brand); color:white;}
+
+  main{max-width:1180px; margin:0 auto; padding:24px;}
+  .view{display:none;}
+  .view.active{display:block; animation:fadeIn .25s ease;}
+  @keyframes fadeIn{from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);}}
+
+  /* Dashboard */
+  .stat-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:24px;}
+  .stat-card{
+    background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+    padding:18px 20px;
+  }
+  .stat-card .label{font-size:12.5px; color:var(--ink-soft); font-weight:600; text-transform:uppercase; letter-spacing:.04em;}
+  .stat-card .value{font-size:28px; font-weight:800; margin-top:6px; font-family:'DM Mono',monospace;}
+  .stat-card.accent{background:linear-gradient(135deg, var(--brand), var(--brand-dark)); border:none;}
+  .stat-card.accent .label{color:rgba(255,255,255,.8);}
+  .stat-card.accent .value{color:white;}
+
+  .status-breakdown{
+    background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+    padding:20px; margin-bottom:24px;
+  }
+  .status-breakdown h3{margin:0 0 14px; font-size:14px; font-weight:700;}
+  .status-row{display:flex; align-items:center; gap:12px; margin-bottom:10px;}
+  .status-row .dot{width:8px; height:8px; border-radius:50%; flex-shrink:0;}
+  .status-row .name{font-size:13.5px; font-weight:600; width:110px;}
+  .status-row .bar-bg{flex:1; height:8px; background:var(--paper); border-radius:4px; overflow:hidden;}
+  .status-row .bar-fill{height:100%; border-radius:4px;}
+  .status-row .count{font-size:13px; font-family:'DM Mono',monospace; width:28px; text-align:right; color:var(--ink-soft);}
+
+  /* Table */
+  .toolbar{display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap; align-items:center;}
+  select, input[type=text], input[type=date], input[type=number], input[type=time]{
+    font-family:inherit; padding:9px 12px; border-radius:9px; border:1px solid var(--line);
+    background:var(--card); font-size:13.5px; color:var(--ink);
+  }
+  .btn{
+    font-family:inherit; font-weight:700; font-size:13.5px; padding:10px 18px;
+    border-radius:9px; border:none; cursor:pointer; transition:opacity .15s;
+  }
+  .btn:hover{opacity:.88;}
+  .btn-primary{background:var(--brand); color:white;}
+  .btn-ghost{background:var(--card); color:var(--ink); border:1px solid var(--line);}
+
+  table{width:100%; border-collapse:collapse; background:var(--card); border-radius:var(--radius); overflow:hidden; border:1px solid var(--line);}
+  thead th{
+    text-align:left; font-size:11.5px; text-transform:uppercase; letter-spacing:.04em;
+    color:var(--ink-soft); padding:12px 14px; border-bottom:1px solid var(--line); font-weight:700;
+  }
+  tbody td{padding:13px 14px; font-size:13.5px; border-bottom:1px solid var(--line);}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr:hover{background:var(--paper);}
+  .no-order{font-family:'DM Mono',monospace; font-weight:600; font-size:12.5px;}
+
+  .badge{
+    display:inline-flex; align-items:center; padding:4px 10px; border-radius:999px;
+    font-size:11.5px; font-weight:700;
+  }
+  .badge-baru{background:var(--info-tint); color:var(--info);}
+  .badge-dikonfirmasi{background:var(--warn-tint); color:var(--warn);}
+  .badge-diproses{background:var(--warn-tint); color:var(--warn);}
+  .badge-dikirim{background:var(--info-tint); color:var(--info);}
+  .badge-selesai{background:var(--ok-tint); color:var(--ok);}
+  .badge-batal{background:var(--bad-tint); color:var(--bad);}
+
+  select.status-select{font-size:12.5px; padding:6px 8px; font-weight:600;}
+
+  .empty{text-align:center; padding:60px 20px; color:var(--ink-soft);}
+  .empty .big{font-size:34px; margin-bottom:8px;}
+
+  /* Form manual */
+  .form-card{
+    background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+    padding:26px; max-width:560px;
+  }
+  .form-card h2{margin:0 0 4px; font-size:17px;}
+  .form-card p.hint{margin:0 0 22px; font-size:13px; color:var(--ink-soft);}
+  .field{margin-bottom:16px;}
+  .field label{display:block; font-size:12.5px; font-weight:700; margin-bottom:6px; color:var(--ink);}
+  .field input, .field select{width:100%;}
+  .field-row{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  .paket-price{font-size:12px; color:var(--brand-dark); font-weight:600; margin-top:4px;}
+  .submit-msg{padding:12px 14px; border-radius:9px; font-size:13px; margin-top:14px; display:none;}
+  .submit-msg.ok{display:block; background:var(--ok-tint); color:var(--ok);}
+  .submit-msg.err{display:block; background:var(--bad-tint); color:var(--bad);}
+
+  .loading{text-align:center; padding:40px; color:var(--ink-soft); font-size:13.5px;}
+
+  @media(max-width:760px){
+    .stat-grid{grid-template-columns:1fr 1fr;}
+    header{flex-direction:column; gap:14px; align-items:flex-start;}
+    nav{width:100%; overflow-x:auto;}
+    table{display:block; overflow-x:auto;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="brand-mark">K</div>
+    <div class="brand-text">
+      <h1>KSMBot</h1>
+      <span>Panel kelola order</span>
+    </div>
+  </div>
+  <nav>
+    <button class="active" data-view="dashboard">Dashboard</button>
+    <button data-view="orders">Daftar Order</button>
+    <button data-view="manual">Input Manual</button>
+  </nav>
+</header>
+
+<main>
+
+  <!-- DASHBOARD -->
+  <section class="view active" id="view-dashboard">
+    <div id="dashboard-content" class="loading">Memuat ringkasan…</div>
+  </section>
+
+  <!-- DAFTAR ORDER -->
+  <section class="view" id="view-orders">
+    <div class="toolbar">
+      <select id="filter-status">
+        <option value="">Semua status</option>
+        <option value="Baru">Baru</option>
+        <option value="Dikonfirmasi">Dikonfirmasi</option>
+        <option value="Diproses">Diproses</option>
+        <option value="Dikirim">Dikirim</option>
+        <option value="Selesai">Selesai</option>
+        <option value="Batal">Batal</option>
+      </select>
+      <input type="date" id="filter-tanggal">
+      <button class="btn btn-ghost" onclick="muatOrders()">Terapkan filter</button>
+      <button class="btn btn-ghost" onclick="resetFilter()">Reset</button>
+    </div>
+    <div id="orders-content" class="loading">Memuat daftar order…</div>
+  </section>
+
+  <!-- INPUT MANUAL -->
+  <section class="view" id="view-manual">
+    <div class="form-card">
+      <h2>Input order manual</h2>
+      <p class="hint">Untuk order yang masuk lewat telepon/langsung, bukan dari WhatsApp bot.</p>
+      <form id="form-manual" onsubmit="submitManual(event)">
+        <div class="field">
+          <label>Nama Pemesan</label>
+          <input type="text" id="m-nama" required>
+        </div>
+        <div class="field">
+          <label>No. HP</label>
+          <input type="text" id="m-hp" placeholder="0812xxxxxxx" required>
+        </div>
+        <div class="field">
+          <label>Paket</label>
+          <select id="m-paket" required onchange="tampilkanHargaPaket()">
+            <option value="">Memuat menu…</option>
+          </select>
+          <div class="paket-price" id="m-paket-harga"></div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Qty (pax)</label>
+            <input type="number" id="m-qty" min="1" required>
+          </div>
+          <div class="field">
+            <label>Jam Sampai</label>
+            <input type="time" id="m-jam" required>
+          </div>
+        </div>
+        <div class="field">
+          <label>Tanggal Kirim</label>
+          <input type="date" id="m-tanggal" required>
+        </div>
+        <div class="field">
+          <label>Lokasi Antar</label>
+          <input type="text" id="m-lokasi" required>
+        </div>
+        <button class="btn btn-primary" type="submit" style="width:100%">Simpan Order</button>
+        <div class="submit-msg" id="manual-msg"></div>
+      </form>
+    </div>
+  </section>
+
+</main>
+
+<script>
+// ============================================================
+// GANTI dengan URL Web App hasil deploy KsmBot.gs
+// ============================================================
+const API_URL = 'GANTI_DENGAN_URL_WEB_APP_ANDA';
+
+const STATUS_LIST = ['Baru','Dikonfirmasi','Diproses','Dikirim','Selesai','Batal'];
+let menuCache = [];
+
+// ---- Navigasi tab ----
+document.querySelectorAll('nav button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('view-' + btn.dataset.view).classList.add('active');
+    if (btn.dataset.view === 'dashboard') muatDashboard();
+    if (btn.dataset.view === 'orders') muatOrders();
+    if (btn.dataset.view === 'manual') muatMenuUntukForm();
+  });
+});
+
+// ---- Helper JSONP (hindari isu CORS untuk GET) ----
+function jsonpFetch(params) {
+  return new Promise((resolve, reject) => {
+    const callbackName = 'cb_' + Math.random().toString(36).substring(2);
+    const script = document.createElement('script');
+    window[callbackName] = (data) => {
+      resolve(data);
+      delete window[callbackName];
+      script.remove();
+    };
+    const qs = new URLSearchParams({ ...params, callback: callbackName }).toString();
+    script.src = `${API_URL}?${qs}`;
+    script.onerror = () => reject(new Error('Gagal memuat data dari server'));
+    document.body.appendChild(script);
+  });
+}
+
+function postData(body) {
+  return fetch(API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(body)
+  }).then(r => r.json());
+}
+
+// ---- Dashboard ----
+function muatDashboard() {
+  const el = document.getElementById('dashboard-content');
+  el.innerHTML = '<div class="loading">Memuat ringkasan…</div>';
+  jsonpFetch({ action: 'getDashboard' }).then(data => {
+    if (data.error) { el.innerHTML = `<div class="empty">${data.error}</div>`; return; }
+
+    const warnaStatus = {
+      Baru:'var(--info)', Dikonfirmasi:'var(--warn)', Diproses:'var(--warn)',
+      Dikirim:'var(--info)', Selesai:'var(--ok)', Batal:'var(--bad)'
+    };
+    const totalPerStatus = Object.values(data.perStatus || {}).reduce((a,b)=>a+b,0) || 1;
+
+    let statusHtml = '';
+    STATUS_LIST.forEach(s => {
+      const jml = (data.perStatus && data.perStatus[s]) || 0;
+      const pct = Math.round((jml/totalPerStatus)*100);
+      statusHtml += `
+        <div class="status-row">
+          <div class="dot" style="background:${warnaStatus[s]}"></div>
+          <div class="name">${s}</div>
+          <div class="bar-bg"><div class="bar-fill" style="width:${pct}%; background:${warnaStatus[s]}"></div></div>
+          <div class="count">${jml}</div>
+        </div>`;
+    });
+
+    el.innerHTML = `
+      <div class="stat-grid">
+        <div class="stat-card accent">
+          <div class="label">Order Hari Ini</div>
+          <div class="value">${data.orderHariIni}</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Pax Hari Ini</div>
+          <div class="value">${data.paxHariIni}</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Omset Hari Ini</div>
+          <div class="value" style="font-size:20px">Rp ${Number(data.omsetHariIni).toLocaleString('id-ID')}</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Order Mendatang</div>
+          <div class="value">${data.orderMendatang}</div>
+        </div>
+      </div>
+      <div class="status-breakdown">
+        <h3>Sebaran Status Order</h3>
+        ${statusHtml}
+      </div>`;
+  }).catch(err => {
+    el.innerHTML = `<div class="empty">Gagal memuat dashboard.<br><span class="mono" style="font-size:12px">${err.message}</span></div>`;
+  });
+}
+
+// ---- Daftar Order ----
+function resetFilter() {
+  document.getElementById('filter-status').value = '';
+  document.getElementById('filter-tanggal').value = '';
+  muatOrders();
+}
+
+function muatOrders() {
+  const el = document.getElementById('orders-content');
+  el.innerHTML = '<div class="loading">Memuat daftar order…</div>';
+
+  const params = { action: 'getOrders' };
+  const status = document.getElementById('filter-status').value;
+  const tanggal = document.getElementById('filter-tanggal').value;
+  if (status) params.status = status;
+  if (tanggal) params.tanggal = tanggal;
+
+  jsonpFetch(params).then(data => {
+    if (!data.orders || data.orders.length === 0) {
+      el.innerHTML = `<div class="empty"><div class="big">📭</div>Belum ada order yang cocok dengan filter ini.</div>`;
+      return;
+    }
+
+    let rows = data.orders.map(o => {
+      const statusKelas = 'badge-' + (o['Status'] || 'Baru').toLowerCase();
+      const opsiStatus = STATUS_LIST.map(s =>
+        `<option value="${s}" ${s === o['Status'] ? 'selected' : ''}>${s}</option>`
+      ).join('');
+      return `
+        <tr>
+          <td class="no-order">${o['No Order'] || '-'}</td>
+          <td>${o['Nama Pemesan'] || '-'}</td>
+          <td>${o['Paket'] || '-'}</td>
+          <td>${o['Qty'] || 0} pax</td>
+          <td>${o['Tanggal Kirim'] || '-'}</td>
+          <td>${o['Jam Sampai'] || '-'}</td>
+          <td>${o['Lokasi Antar'] || '-'}</td>
+          <td class="mono">Rp ${Number(o['Total Harga']||0).toLocaleString('id-ID')}</td>
+          <td>
+            <select class="status-select" onchange="ubahStatus('${o['No Order']}', this.value, this)">
+              ${opsiStatus}
+            </select>
+          </td>
+        </tr>`;
+    }).join('');
+
+    el.innerHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th>No Order</th><th>Pemesan</th><th>Paket</th><th>Qty</th>
+            <th>Tanggal</th><th>Jam</th><th>Lokasi</th><th>Total</th><th>Status</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+  }).catch(err => {
+    el.innerHTML = `<div class="empty">Gagal memuat data.<br><span class="mono" style="font-size:12px">${err.message}</span></div>`;
+  });
+}
+
+function ubahStatus(noOrder, statusBaru, selectEl) {
+  selectEl.disabled = true;
+  postData({ action: 'updateStatus', noOrder, status: statusBaru })
+    .then(res => {
+      selectEl.disabled = false;
+      if (!res.success) alert('Gagal update status: ' + (res.error || 'unknown error'));
+    })
+    .catch(err => {
+      selectEl.disabled = false;
+      alert('Gagal update status: ' + err.message);
+    });
+}
+
+// ---- Input Manual ----
+function muatMenuUntukForm() {
+  const sel = document.getElementById('m-paket');
+  if (menuCache.length > 0) { renderOpsiMenu(); return; }
+  jsonpFetch({ action: 'getMenu' }).then(data => {
+    menuCache = data.menu || [];
+    renderOpsiMenu();
+  }).catch(() => {
+    sel.innerHTML = '<option value="">Gagal memuat menu</option>';
+  });
+}
+
+function renderOpsiMenu() {
+  const sel = document.getElementById('m-paket');
+  if (menuCache.length === 0) {
+    sel.innerHTML = '<option value="">Belum ada paket aktif</option>';
+    return;
+  }
+  sel.innerHTML = '<option value="">Pilih paket…</option>' +
+    menuCache.map(m => `<option value="${m.nama}" data-harga="${m.harga}">${m.nama}</option>`).join('');
+}
+
+function tampilkanHargaPaket() {
+  const sel = document.getElementById('m-paket');
+  const opt = sel.options[sel.selectedIndex];
+  const harga = opt ? opt.dataset.harga : null;
+  document.getElementById('m-paket-harga').textContent =
+    harga ? `Rp ${Number(harga).toLocaleString('id-ID')} / pax` : '';
+}
+
+function submitManual(evt) {
+  evt.preventDefault();
+  const msgEl = document.getElementById('manual-msg');
+  msgEl.className = 'submit-msg';
+  msgEl.textContent = '';
+
+  const tglInput = document.getElementById('m-tanggal').value; // yyyy-mm-dd
+  const [y, m, d] = tglInput.split('-');
+  const tglFormatIndo = `${d}/${m}/${y}`;
+
+  const payload = {
+    action: 'createOrderManual',
+    nama: document.getElementById('m-nama').value,
+    no_hp: document.getElementById('m-hp').value,
+    paket: document.getElementById('m-paket').value,
+    qty: document.getElementById('m-qty').value,
+    tanggal: tglFormatIndo,
+    jam: document.getElementById('m-jam').value,
+    lokasi: document.getElementById('m-lokasi').value
+  };
+
+  const btn = evt.target.querySelector('button[type=submit]');
+  btn.disabled = true;
+  btn.textContent = 'Menyimpan…';
+
+  postData(payload).then(res => {
+    btn.disabled = false;
+    btn.textContent = 'Simpan Order';
+    if (res.success) {
+      msgEl.className = 'submit-msg ok';
+      msgEl.textContent = `✅ Order ${res.noOrder} tersimpan. Total Rp ${Number(res.total).toLocaleString('id-ID')}`;
+      document.getElementById('form-manual').reset();
+      document.getElementById('m-paket-harga').textContent = '';
+    } else {
+      msgEl.className = 'submit-msg err';
+      msgEl.textContent = '⚠️ ' + (res.errors ? res.errors.join(', ') : res.error);
+    }
+  }).catch(err => {
+    btn.disabled = false;
+    btn.textContent = 'Simpan Order';
+    msgEl.className = 'submit-msg err';
+    msgEl.textContent = '⚠️ Gagal menyimpan: ' + err.message;
+  });
+}
+
+// ---- Init ----
+muatDashboard();
+</script>
+
+</body>
+</html>
